@@ -1,0 +1,85 @@
+- name: Ensure containerd configuration path exists
+      file:
+        path: /etc/containerd
+        state: directory
+
+    - name: Ensure containerd configuration file exists
+      file:
+        path: /etc/containerd/config.toml
+        state: touch
+
+    - name: Ensure containerd is configured correctly
+      blockinfile:
+        path: /etc/containerd/config.toml
+        block: |
+          [plugins]
+            [plugins."io.containerd.grpc.v1.cri"]
+              # Configuration for the containerd runtime
+              sandbox_image = "k8s.gcr.io/pause:3.10"
+              [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
+                SystemdCgroup = true
+
+    - name: Restart containerd service
+      service:
+        name: containerd
+        state: restarted
+
+
+ - name: Install CNI plugins
+      shell: |
+        wget -O ./cni-plugins-linux-arm64-v1.6.0.tgz https://github.com/containernetworking/plugins/releases/download/v1.6.0/cni-plugins-linux-arm64-v1.6.0.tgz &&
+        mkdir -p /opt/cni/bin &&
+        tar -C /opt/cni/bin -xzf cni-plugins-linux-arm64-v1.6.0.tgz
+      args:
+        creates: /opt/cni/bin
+
+    - name: Create CNI configuration
+      ansible.builtin.copy:
+        dest: /etc/cni/net.d/10-containerd-net.conflist
+        content: |
+          {
+            "cniVersion": "1.0.0",
+            "name": "containerd-net",
+            "plugins": [
+              {
+                "type": "bridge",
+                "bridge": "cni0",
+                "isGateway": true,
+                "ipMasq": true,
+                "promiscMode": true,
+                "ipam": {
+                  "type": "host-local",
+                  "ranges": [
+                    [{
+                      "subnet": "10.88.0.0/16"
+                    }],
+                    [{
+                      "subnet": "2001:4860:4860::/64"
+                    }]
+                  ],
+                  "routes": [
+                    { "dst": "0.0.0.0/0" },
+                    { "dst": "::/0" }
+                  ]
+                }
+              },
+              {
+                "type": "portmap",
+                "capabilities": {"portMappings": true}
+              }
+            ]
+          }
+        mode: "0644"
+        owner: root
+        group: root
+
+    - name: Install Go
+      shell: |
+        wget -O ./go1.23.2.linux-arm64.tar.gz https://go.dev/dl/go1.23.2.linux-arm64.tar.gz &&
+        rm -rf /usr/local/go && 
+        tar -C /usr/local -xzf go1.23.2.linux-arm64.tar.gz &&
+        rm -rf ./go1.23.2.linux-arm64.tar.gz &&
+        echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.profile &&
+        . ~/.profile
+      args:
+        creates: /usr/local/go   

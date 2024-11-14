@@ -1,0 +1,110 @@
+---
+- name: Initialize Kubernetes
+  hosts: raspi
+  become: yes
+  tasks:
+    - name: Update apt package list
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install dependencies
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+          - docker.io
+          - docker-buildx
+          - make
+          - conntrack
+          - socat
+        state: present
+
+    - name: Install crictl
+      shell: |
+        wget -O crictl-v1.31.1-linux-arm64.tar.gz https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.31.1/crictl-v1.31.1-linux-arm64.tar.gz &&
+        tar -zxvf crictl-v1.31.1-linux-arm64.tar.gz &&
+        mv crictl /usr/local/bin &&
+        rm -rf crictl-v1.31.1-linux-arm64.tar.gz
+      args:
+        creates: /usr/local/bin/crictl
+
+    - name: Disable swap memory
+      shell: |
+        swapoff -a &&
+        sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+
+    - name: Create Docker user group
+      shell: |
+        usermod -aG docker $USER
+
+    - name: Start Docker service
+      systemd:
+        name: docker
+        enabled: yes
+        state: started
+
+    - name: Install CRI and start service for Docker
+      shell: |
+        wget -O cri-dockerd-0.3.15.arm64.tgz https://github.com/Mirantis/cri-dockerd/releases/download/v0.3.15/cri-dockerd-0.3.15.arm64.tgz &&
+        tar -xvzf cri-dockerd-0.3.15.arm64.tgz &&
+        mv cri-dockerd/cri-dockerd /usr/bin/cri-dockerd &&
+        chmod +x /usr/bin/cri-dockerd &&
+        wget https://raw.githubusercontent.com/Mirantis/cri-dockerd/master/packaging/systemd/cri-docker.service &&
+        wget https://raw.githubusercontent.com/Mirantis/cri-dockerd/master/packaging/systemd/cri-docker.socket &&
+        mv cri-docker.service /etc/systemd/system/ &&
+        mv cri-docker.socket /etc/systemd/system/ &&
+        systemctl enable cri-docker.service &&
+        systemctl enable cri-docker.socket &&
+        systemctl start cri-docker.service &&
+        systemctl start cri-docker.socket &&
+        rm -rf cri-dockerd-0.3.15.arm64.tgz &&
+        crictl config --set runtime-endpoint=unix:///var/run/cri-dockerd.sock &&
+        crictl config --set image-endpoint=unix:///var/run/cri-dockerd.sock
+
+    - name: Clone Kubernetes and build binaries
+      shell: |
+        git clone --branch v1.31.1 --single-branch https://github.com/kubernetes/kubernetes.git &&
+        cd kubernetes &&
+        build/run.sh make &&
+        cd ./_output/dockerized/bin/linux/arm64 &&
+        mv ./* /usr/bin &&
+        rm -rf kubernetes &&
+        cd
+      args:
+        creates: /usr/bin/kubeadm
+
+    - name: Create Kubelet service file
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/kubelet.service
+        content: |
+          [Unit]
+          Description=Kubernetes Kubelet
+          Documentation=https://kubernetes.io/docs/home/
+          After=network.target
+
+          [Service]
+          ExecStart=/usr/bin/kubelet --kubeconfig=/etc/kubernetes/kubelet.conf
+          Restart=on-failure
+          StartLimitInterval=0
+          RestartSec=10
+          LimitNOFILE=1048576
+          LimitNPROC=1048576
+          LimitCORE=infinity
+          TimeoutStartSec=0
+
+          [Install]
+          WantedBy=multi-user.target
+        mode: "0644"
+        owner: root
+        group: root
+
+    - name: Restart containerd service and socket
+      shell: |
+        systemctl restart containerd
+
+    - name: Enable Kubelet service
+      shell: |
+        systemctl enable kubelet.service
