@@ -45,6 +45,9 @@ spec:
           image: docker.io/kfcmanager/blobstore:1.0
           ports:
             - containerPort: 80
+          volumeMounts:
+            - name: volv
+              mountPath: /data
       volumes:
         - name: volv
           persistentVolumeClaim:

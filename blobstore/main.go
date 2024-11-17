@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	v, err := newVolume("./")
+	v, err := newVolume("./data")
 	if err != nil {
 		panic(err)
 	}
