@@ -16,7 +16,7 @@
 
     - name: Install Calico CNI plugin
       shell: |
-        kubectl apply https://raw.githubusercontent.com/projectcalico/calico/v3.29.0/manifests/calico.yaml
+        kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.29.0/manifests/calico.yaml
       become: no
 
     - name: Install ArgoCD
@@ -24,3 +24,4 @@
         kubectl create namespace argocd &&
         kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml &&
         kubectl port-forward -n argocd svc/argocd-server 8080:443
+      become: no
