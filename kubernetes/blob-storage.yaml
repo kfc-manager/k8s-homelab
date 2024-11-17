@@ -1,7 +1,7 @@
 kind: StorageClass
 apiVersion: storage.k8s.io/v1
 metadata:
-  name: longhorn
+  name: blob-storage-class
 provisioner: driver.longhorn.io
 allowVolumeExpansion: true
 parameters:
@@ -14,11 +14,11 @@ parameters:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: object-store
+  name: blob-volume-claim
 spec:
   accessModes:
     - ReadWriteOnce
-  storageClassName: longhorn
+  storageClassName: blob-storage-class
   resources:
     requests:
       storage: 100Gi
