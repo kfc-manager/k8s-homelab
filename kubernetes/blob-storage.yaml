@@ -51,7 +51,7 @@ spec:
       volumes:
         - name: volv
           persistentVolumeClaim:
-          claimName: blob-volume-claim
+            claimName: blob-volume-claim
 
 ---
 apiVersion: v1
