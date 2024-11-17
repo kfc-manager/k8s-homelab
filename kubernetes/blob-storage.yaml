@@ -22,3 +22,44 @@ spec:
   resources:
     requests:
       storage: 100Gi
+
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: blob-storage-deployment
+  labels:
+    app: blob-storage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: blob-storage
+  template:
+    metadata:
+      labels:
+        app: blob-storage
+    spec:
+      containers:
+        - name: blob-storage
+          image: docker.io/kfcmanager/blobstore:1.0
+          ports:
+            - containerPort: 80
+      volumes:
+        - name: volv
+          persistentVolumeClaim:
+          claimName: blob-volume-claim
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: blob-storage-service
+spec:
+  selector:
+    app: blob-storage
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP
