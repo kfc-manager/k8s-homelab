@@ -4,6 +4,12 @@ metadata:
   name: argo-config
   namespace: argocd
 spec:
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      selfHeal: true
+      prune: true
   project: default
   source:
     repoURL: https://github.com/kfc-manager/k8s-homelab.git
@@ -12,11 +18,3 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: app
-
-  syncPolicy:
-    syncOptions:
-      - CreateNamespace=true
-
-    automated:
-      selfHeal: true
-      prune: true
