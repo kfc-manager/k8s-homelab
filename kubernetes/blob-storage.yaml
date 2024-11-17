@@ -24,7 +24,7 @@ spec:
       storage: 100Gi
 
 ---
-apiVersion: v1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: blob-storage-deployment
