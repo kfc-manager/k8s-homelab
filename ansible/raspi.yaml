@@ -5,7 +5,7 @@
   tasks:
     - name: Set hostname
       shell: |
-        hostnamectl set-hostname "{{ inventory_hostname }}.local"
+        hostnamectl set-hostname "{{ inventory_hostname }}"
 
     - name: Set node routing
       ansible.builtin.copy:
@@ -18,7 +18,7 @@
 
           # Ansible managed entries
           {% for host in ansible_play_hosts %}
-          {{ hostvars[host]['ansible_default_ipv4']['address'] }} {{ host }}.local {{ hostvars[host]['ansible_hostname'] }}
+          {{ hostvars[host]['ansible_default_ipv4']['address'] }} {{ host }} {{ host }}
           {% endfor %}
         owner: root
         group: root
