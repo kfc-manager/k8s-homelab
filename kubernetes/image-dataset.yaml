@@ -4,6 +4,19 @@ metadata:
   name: image-dataset
 
 ---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: postgres-storage-class
+provisioner: driver.longhorn.io
+allowVolumeExpansion: true
+parameters:
+  numberOfReplicas: "2"
+  staleReplicaTimeout: "2880" # 48 hours in minutes
+  fromBackup: ""
+  fsType: "ext4"
+
+---
 apiVersion: "acid.zalan.do/v1"
 kind: "postgresql"
 metadata:
@@ -13,6 +26,7 @@ spec:
   teamId: "image-dataset"
   volume:
     size: "100Gi"
+    storageClass: "postgres-storage-class"
   numberOfInstances: 3
   users:
     postgres:
