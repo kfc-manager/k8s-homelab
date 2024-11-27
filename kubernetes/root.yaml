@@ -14,7 +14,9 @@ spec:
   source:
     repoURL: https://github.com/kfc-manager/k8s-homelab.git
     targetRevision: HEAD
-    path: apps
+    path: kubernetes
+  ignoreDifferences:
+    - path: "root.yaml"
   destination:
     server: https://kubernetes.default.svc
     namespace: default
