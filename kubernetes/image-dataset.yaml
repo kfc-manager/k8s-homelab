@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: image-dataset
+
+---
+apiVersion: "acid.zalan.do/v1"
+kind: "postgresql"
+metadata:
+  name: "postgres-cluster"
+  namespace: "image-dataset"
+spec:
+  teamId: "image-dataset"
+  volume:
+    size: "100Gi"
+  numberOfInstances: 3
+  users:
+    postgres:
+      - "superuser"
+      - "createdb"
+  databases:
+    postgres: postgres
+  postgresql:
+    version: "16"
+  patroni:
+    synchronous_mode: true
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+    limits:
+      cpu: "1"
+      memory: "1Gi"

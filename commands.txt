@@ -1,4 +1,0 @@
-kubectl port-forward --address 192.168.0.236 -n argocd svc/argocd-server 8080:443
-
-kubectl port-forward --address 192.168.0.236 -n longhorn-system svc/longhorn-frontend 8080:80
-

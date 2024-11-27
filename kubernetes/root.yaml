@@ -8,8 +8,6 @@ spec:
     automated:
       selfHeal: true
       prune: true
-    syncOptions:
-      - CreateNamespace=true
   project: default
   source:
     repoURL: https://github.com/kfc-manager/k8s-homelab.git
