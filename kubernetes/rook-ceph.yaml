@@ -27,6 +27,11 @@ spec:
       path: deploy/examples
       directory:
         include: "operator.yaml"
+    - repoURL: https://github.com/rook/rook.git
+      targetRevision: v1.15.5
+      path: deploy/examples
+      directory:
+        include: "cluster-test.yaml"
   destination:
     server: https://kubernetes.default.svc
     namespace: rook-ceph
