@@ -11,7 +11,7 @@ spec:
     syncOptions:
       - CreateNamespace=true
   project: default
-  sources:
+  source:
     repoURL: https://github.com/rook/rook.git
     targetRevision: v1.15.5
     path: deploy/examples
