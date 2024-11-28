@@ -133,45 +133,22 @@ spec:
 
 ---
 apiVersion: ceph.rook.io/v1
-kind: CephBlockPool
-metadata:
-  name: blob-storage-mgr
-  namespace: rook-ceph
-spec:
-  name: .mgr
-  replicated:
-    size: 1
-    requireSafeReplicaSize: false
-
----
-apiVersion: ceph.rook.io/v1
 kind: CephObjectStore
 metadata:
-  name: rook-ceph-rgw
+  name: my-store
   namespace: rook-ceph
 spec:
+  metadataPool:
+    failureDomain: host
+    replicated:
+      size: 1
+  dataPool:
+    failureDomain: host
+    erasureCoded:
+      # For production it is recommended to use more chunks, such as 4+2 or 8+4 over 1+0
+      dataChunks: 1
+      codingChunks: 0
+  preservePoolsOnDelete: false
   gateway:
-    instances: 1
     port: 80
-    securePort: 443
-    svcNamespace: rook-ceph
-  store:
-    storeType: bluestore
-    nodes:
-      - name: ceph-node-0
-        resources:
-          requests:
-            memory: 1Gi
-            cpu: 0.5
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: rook-ceph-rgw
-  namespace: rook-ceph
-spec:
-  ports:
-    - port: 80
-      targetPort: 80
-  selector:
-    app: rook-ceph-rgw
+    instances: 1
