@@ -16,10 +16,7 @@ spec:
     targetRevision: v1.15.5
     path: deploy/examples
     directory:
-      include:
-        - crds.yaml
-        - common.yaml
-        - operator.yaml
+      include: "crds.yaml|common.yaml|operator.yaml"
   destination:
     server: https://kubernetes.default.svc
     namespace: rook-ceph
