@@ -12,9 +12,9 @@ spec:
       - CreateNamespace=true
   project: default
   sources:
-    - chart: rook-ceph-cluster
+    - chart: rook-ceph
       repoURL: https://charts.rook.io/release
-      targetRevision: v1.16
+      targetRevision: latest
       helm:
         values: |
           preUpgradeChecker:
