@@ -51,15 +51,9 @@ spec:
     spec:
       containers:
         - name: postgres
-          image: docker.io/pgvector/pgvector:0.8.0-pg16
+          image: docker.io/postgres/postgres:16.4
           ports:
             - containerPort: 5432
-          command:
-            [
-              "bash",
-              "-c",
-              'if [ -z "$(ls -A /var/lib/postgresql/data)" ]; then initdb -D /var/lib/postgresql/data; fi && postgres',
-            ]
           volumeMounts:
             - name: volv
               mountPath: /var/lib/postgresql/data
