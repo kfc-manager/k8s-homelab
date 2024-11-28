@@ -11,12 +11,22 @@ spec:
     syncOptions:
       - CreateNamespace=true
   project: default
-  source:
-    repoURL: https://github.com/rook/rook.git
-    targetRevision: v1.15.5
-    path: deploy/examples
-    directory:
-      include: "crds.yaml|common.yaml|operator.yaml"
+  sources:
+    - repoURL: https://github.com/rook/rook.git
+      targetRevision: v1.15.5
+      path: deploy/examples
+      directory:
+        include: "crds.yaml"
+    - repoURL: https://github.com/rook/rook.git
+      targetRevision: v1.15.5
+      path: deploy/examples
+      directory:
+        include: "common.yaml"
+    - repoURL: https://github.com/rook/rook.git
+      targetRevision: v1.15.5
+      path: deploy/examples
+      directory:
+        include: "operator.yaml"
   destination:
     server: https://kubernetes.default.svc
     namespace: rook-ceph
