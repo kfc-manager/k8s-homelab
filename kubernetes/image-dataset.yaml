@@ -51,7 +51,7 @@ spec:
     spec:
       containers:
         - name: postgres
-          image: docker.io/postgres:16.4
+          image: docker.io/pgvector/pgvector:0.8.0-pg16
           ports:
             - containerPort: 5432
           volumeMounts:
