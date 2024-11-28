@@ -81,3 +81,97 @@ spec:
       port: 5432
       targetPort: 5432
   type: ClusterIP
+
+---
+apiVersion: ceph.rook.io/v1
+kind: CephCluster
+metadata:
+  name: blob-storage
+  namespace: rook-ceph
+spec:
+  dataDirHostPath: /var/lib/rook
+  cephVersion:
+    image: quay.io/ceph/ceph:v19
+    allowUnsupported: true
+  mon:
+    count: 1
+    allowMultiplePerNode: true
+  mgr:
+    count: 1
+    allowMultiplePerNode: true
+    modules:
+      - name: rook
+        enabled: true
+  dashboard:
+    enabled: true
+  crashCollector:
+    disable: true
+  storage:
+    useAllNodes: true
+    useAllDevices: true
+    allowDeviceClassUpdate: true
+    allowOsdCrushWeightUpdate: false
+  monitoring:
+    enabled: false
+  healthCheck:
+    daemonHealth:
+      mon:
+        interval: 45s
+        timeout: 600s
+  priorityClassNames:
+    all: system-node-critical
+    mgr: system-cluster-critical
+  disruptionManagement:
+    managePodBudgets: true
+  cephConfig:
+    global:
+      osd_pool_default_size: "1"
+      mon_warn_on_pool_no_redundancy: "false"
+      bdev_flock_retry: "20"
+      bluefs_buffered_io: "false"
+      mon_data_avail_warn: "10"
+
+---
+apiVersion: ceph.rook.io/v1
+kind: CephBlockPool
+metadata:
+  name: blob-storage-mgr
+  namespace: rook-ceph
+spec:
+  name: .mgr
+  replicated:
+    size: 1
+    requireSafeReplicaSize: false
+
+---
+apiVersion: ceph.rook.io/v1
+kind: CephObjectStore
+metadata:
+  name: rook-ceph-rgw
+  namespace: rook-ceph
+spec:
+  gateway:
+    instances: 1
+    port: 80
+    securePort: 443
+    svcNamespace: rook-ceph
+  store:
+    storeType: bluestore
+    nodes:
+      - name: ceph-node-0
+        resources:
+          requests:
+            memory: 1Gi
+            cpu: 0.5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rook-ceph-rgw
+  namespace: rook-ceph
+spec:
+  ports:
+    - port: 80
+      targetPort: 80
+  selector:
+    app: rook-ceph-rgw
