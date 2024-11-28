@@ -12,15 +12,14 @@ spec:
       - CreateNamespace=true
   project: default
   sources:
-    - chart: rook-ceph
-      repoURL: https://github.com/rook/rook.git
-      targetRevision: v1.15.5
-      path: deploy/examples
-      directory:
-        include:
-          - crds.yaml
-          - common.yaml
-          - operator.yaml
+    repoURL: https://github.com/rook/rook.git
+    targetRevision: v1.15.5
+    path: deploy/examples
+    directory:
+      include:
+        - crds.yaml
+        - common.yaml
+        - operator.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: rook-ceph
