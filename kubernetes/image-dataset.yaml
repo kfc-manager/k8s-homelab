@@ -17,31 +17,59 @@ parameters:
   fsType: "ext4"
 
 ---
-apiVersion: "acid.zalan.do/v1"
-kind: "postgresql"
+apiVersion: v1
+kind: PersistentVolumeClaim
 metadata:
-  name: "postgres-cluster"
-  namespace: "image-dataset"
+  name: postgres-volume-claim
+  namespace: image-dataset
 spec:
-  teamId: "image-dataset"
-  volume:
-    size: "100Gi"
-    storageClass: "postgres-storage-class"
-  numberOfInstances: 3
-  users:
-    postgres:
-      - "superuser"
-      - "createdb"
-  databases:
-    postgres: postgres
-  postgresql:
-    version: "16"
-  patroni:
-    synchronous_mode: true
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: postgres-storage-class
   resources:
     requests:
-      cpu: "500m"
-      memory: "512Mi"
-    limits:
-      cpu: "1"
-      memory: "1Gi"
+      storage: 100Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-deployment
+  namespace: image-dataset
+  labels:
+    app: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      namespace: image-dataset
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: docker.io/pgvector/pgvector:0.8.0-pg16
+          ports:
+            - containerPort: 5432
+      volumes:
+        - name: volv
+          persistentVolumeClaim:
+          claimName: postgres-volume-claim
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: image-dataset
+spec:
+  selector:
+    app: postgres
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+  type: ClusterIP
