@@ -54,6 +54,12 @@ spec:
           image: docker.io/pgvector/pgvector:0.8.0-pg16
           ports:
             - containerPort: 5432
+          volumeMounts:
+            - name: volv
+              mountPath: /var/lib/postgresql/data
+          env:
+            - name: POSTGRES_PASSWORD
+              value: wert1234
       volumes:
         - name: volv
           persistentVolumeClaim:
