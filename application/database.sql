@@ -1,0 +1,22 @@
+CREATE EXTENSION IF NOT EXISTS vector;
+
+CREATE TABLE IF NOT EXISTS image (
+  hash VARCHAR(64) PRIMARY KEY,
+  size INTEGER NOT NULL,
+  created_at TIMESTAMP NOT NULL,
+  source TEXT NOT NULL,
+  width INTEGER NOT NULL,
+  height INTEGER NOT NULL,
+  embedding VECTOR(768)
+);
+
+CREATE TABLE IF NOT EXISTS label (
+  id UUID PRIMARY KEY,
+  value TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS image_label_mapping (
+  image_hash VARCHAR(64),
+  label_id UUID,
+  created_at TIMESTAMP
+);
