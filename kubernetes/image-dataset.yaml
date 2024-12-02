@@ -103,7 +103,7 @@ spec:
     spec:
       containers:
         - name: rabbitmq
-          image: docker.io/library/rabbitmq:4.0.4
+          image: docker.io/arm64v8/rabbitmq:4.0.4
           ports:
             - containerPort: 5672
 
@@ -121,3 +121,138 @@ spec:
       port: 5672
       targetPort: 5672
   type: ClusterIP
+
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: blob-storage-class
+provisioner: driver.longhorn.io
+allowVolumeExpansion: true
+parameters:
+  numberOfReplicas: "2"
+  staleReplicaTimeout: "2880" # 48 hours in minutes
+  fromBackup: ""
+  fsType: "ext4"
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: blob-volume-claim
+  namespace: image-dataset
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: blob-storage-class
+  resources:
+    requests:
+      storage: 100Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-api-deployment
+  namespace: image-dataset
+  labels:
+    app: data-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: data-api
+  template:
+    metadata:
+      namespace: image-dataset
+      labels:
+        app: data-api
+    spec:
+      containers:
+        - name: data-api
+          image: docker.io/kfcmanager/data-api:1.0.0
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: volv
+              mountPath: /data
+          env:
+            - name: DB_HOST
+              value: "postgres-service"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_NAME
+              value: "postgres"
+            - name: DB_USER
+              value: "postgres"
+            - name: DB_PASS
+              value: "wert1234"
+            - name: BUCKET_PATH
+              value: "./data"
+            - name: QUEUE_HOST
+              value: "rabbitmq-service"
+            - name: QUEUE_PORT
+              value: "5672"
+            - name: QUEUE_NAME
+              value: "embedding"
+      volumes:
+        - name: volv
+          persistentVolumeClaim:
+            claimName: blob-volume-claim
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: data-api-service
+  namespace: image-dataset
+spec:
+  selector:
+    app: data-api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: clip-deployment
+  namespace: image-dataset
+  labels:
+    app: clip
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: clip
+  template:
+    metadata:
+      namespace: image-dataset
+      labels:
+        app: clip
+    spec:
+      containers:
+        - name: clip
+          image: docker.io/kfcmanager/clip:1.0.0
+          env:
+            - name: DB_HOST
+              value: "postgres-service"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_NAME
+              value: "postgres"
+            - name: DB_USER
+              value: "postgres"
+            - name: DB_PASS
+              value: "wert1234"
+            - name: API_HOST
+              value: "data-api-service"
+            - name: QUEUE_HOST
+              value: "rabbitmq-service"
+            - name: QUEUE_PORT
+              value: "5672"
+            - name: QUEUE_NAME
+              value: "embedding"
