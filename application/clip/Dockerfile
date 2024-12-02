@@ -1,4 +1,4 @@
-FROM python:3.11.9-slim
+FROM --platform=linux/arm64 docker.io/arm64v8/python:3.11.9-slim
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends git ca-certificates && \
